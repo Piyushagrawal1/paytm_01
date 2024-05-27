@@ -8,6 +8,8 @@ const router = express.Router();
 
 //signup and signin routes
 
+
+//signup
 const signupBody = zod.object({
     username: zod.string().email(),
     firstName: zod.string(),
@@ -39,7 +41,7 @@ router.post('/signup', async (req, res) => {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         password: req.body.password
-    })  
+    })
 
     const userId = user._id;
 
@@ -49,7 +51,43 @@ router.post('/signup', async (req, res) => {
 
     res.json({
         message: "User created successfully",
-        token: "jwt"    
+        token: token
+    })
+})
+
+
+//signin
+
+const signinBody = zod.object({
+    username: zod.string().email(),
+    password: zod.string(),
+})
+
+router.post('/signin', async (req, res) => {
+    const { success } = signinBody.safeParse(req.body);
+    if (!success) {
+        return res.status(411).json({
+            message: 'Incorrects Inputs'
+        })
+
+    }
+    const user = await User.findOne({
+        username: req.body.username,
+        password: req.body.password
+    })
+
+    if (user) {
+        const token = jwt.sign({
+            userId: user._id
+        }, JWT_SECRET)
+
+        res.json({
+            token: token,
+        })
+        return;
+    }
+    res.status(411).json({
+        message: "Error while logging in"
     })
 })
 
